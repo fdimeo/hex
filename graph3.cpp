@@ -12,7 +12,8 @@ class graphPoint;
 class Graph;
 
 // node color class
-enum class nodecolor{ NONE, RED, BLUE };
+enum class nodecolor{ 
+   NONE, RED, BLUE };
 
 class ShortestPathAlgo
 {
@@ -60,7 +61,9 @@ public:
    void addNode(unsigned int nodeNumber);
    void removeNode(unsigned int nodeNumber);
    void setNodeValue(unsigned int nodeNumber, unsigned int cost);
-   unsigned int getNodeValue(unsigned int nodeNumber);
+   int getNodeValue(unsigned int nodeNumber);
+   void setNodeColor(unsigned int nodeNumber, nodecolor color);
+   nodecolor getNodeColor(unsigned int nodeNumber);
    void addEdge(unsigned int sourceNodeNumber, unsigned int destNodeNumber, unsigned int edgeWeight);
    bool hasEdge(unsigned int sourceNodeNumber, unsigned int destNodeNumber);
 
@@ -75,6 +78,10 @@ public:
    void setNodeVisited(unsigned int nodeNumber);
    void doDijkstra( unsigned int originNode, unsigned int destNode, std::list<unsigned int> *pathResult, int &pathCost);
    void doPrim( unsigned int originNode);
+
+   unsigned int getNodeNumber(unsigned int rowNumber, unsigned int nodeNumberInRow); // compute the absolute node number given the row and node number in that row
+
+   friend std::ostream& operator<<(std::ostream &out, Graph &g);  // prints the graph 
 
    void printGraph();
 };
@@ -469,18 +476,18 @@ void Graph::setNodeValue(unsigned int nodeNumber, unsigned int cost)
    }
 }
 
-// unsigned int Graph::getNodeValue(unsigned int nodeNumber)
-// {
-//    unsigned int retval = -1;
-//    std::map<int, graphPoint* >::iterator it = graphNodes.find(nodeNumber);
+int Graph::getNodeValue(unsigned int nodeNumber)
+ {
+    int retval = -1;
+    std::map<int, graphPoint* >::iterator it = graphNodes.find(nodeNumber);
 
-//    if( it != graphNodes.end())
-//    {
-//       retval = it->second->getPointCost ();
-//    }
+    if( it != graphNodes.end())   
+    {
+      retval = it->second->getPointCost ();
+    }
 
-//    return retval;
-// }
+    return retval;
+ }
 
 // int Graph::setEdgeValue(unsigned int sourceNodeNumber,unsigned int destNodeNumber, unsigned int weight )
 // {
@@ -536,6 +543,34 @@ void Graph::setNodeVisited(unsigned int nodeNumber)
 
 }
 
+inline unsigned int Graph::getNodeNumber(unsigned int rowNumber, unsigned int nodeNumberInRow)
+{
+   return ((rowNumber * m_hexGraphDimension) + nodeNumberInRow);
+}
+
+enum nodecolor Graph::getNodeColor(unsigned int nodeNumber)
+{
+   std::map<int, graphPoint* >::iterator it = graphNodes.find(nodeNumber);
+
+   if( it != graphNodes.end())
+   {
+      return it->second->m_nodeColor;
+   }
+
+   return nodecolor::NONE;
+
+}
+
+void Graph::setNodeColor(unsigned int nodeNumber, enum nodecolor color)
+{
+   std::map<int, graphPoint* >::iterator it = graphNodes.find(nodeNumber);
+
+   if( it != graphNodes.end())
+   {
+      it->second->m_nodeColor;
+   }
+
+}
 
 unsigned int Graph::getNodeCount()
 {
@@ -892,12 +927,58 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
     }
     else
     {
-       // std::cout << "Count not find a route from " << originNode << " to " << destNode << std::endl;
+       std::cout << "Could not find a route from " << originNode << " to " << destNode << std::endl;
        pathList->clear();  // no elements in the list
        pathCost = -1;
     }
 
- }
+}
+
+std::ostream& operator<<(std::ostream &out, Graph &g) 
+{
+   // print the graph
+   // for hex graphs, this needs to be done row by row and indented
+
+   out << "\n=========== hex graph  ===============\n";
+
+   // hex graphs have a dimension greater than 0
+   if(g.m_hexGraphDimension > 0)
+   {
+      // this is a hex graph
+
+      // must do two iterations per row
+      for(int row=0; row<g.m_hexGraphDimension; row++)
+      {
+         for(int rowIter=0; rowIter<2; rowIter++)
+         {
+            for(int col=0; col<g.m_hexGraphDimension;col++)
+            {
+               unsigned int nodeNumber = g.getNodeNumber(row, col);
+               out << "node number is" << nodeNumber << std::endl;
+               if(g.getNodeValue(nodeNumber) != -1)
+               {
+                  if(!rowIter)
+                  {
+                     // we're printing the even row 
+                     out << 
+                        (g.getNodeColor(nodeNumber) == (nodecolor::NONE)) ?
+                        "." : (g.getNodeColor(nodeNumber) == (nodecolor::RED)) ? "X" : "O";
+                                         
+                  }
+                  else
+                  {
+                     // print the odd row
+
+                  }
+               }
+            }
+         }
+         out << std::endl;
+      }
+   }
+
+   return out;
+}
 
 ShortestPathAlgo::ShortestPathAlgo() : pathCost(-1)
 {
@@ -947,7 +1028,7 @@ std::ostream &operator<< (std::ostream &cout, std::list<unsigned int> *path)
    }
    else
    {
-      std::cout << "No route found" << std::endl;
+      cout << "No route found" << std::endl;
    }
       
    return cout;
@@ -999,13 +1080,15 @@ std::ostream &operator<< (std::ostream &cout, std::list<unsigned int> *path)
     const char print_graph_entry = 'n';
 
     // instantiate a graph from the local file (called graph.txt)
-    Graph G(11); // a new graph 3x3 hex graph
+    Graph G(3); // a new graph 3x3 hex graph
 
     // print out the whole graph, but only if we've compiled to do so
     G.printGraph();
 
 
     std::cout <<"Graph has " << G.getNodeCount() << " nodes and " << G.getEdgeCount() << " indicies" << std::endl;
+
+    std::cout << "\n\n=========== Graph Printout ===============\n\n" << G << std::endl;
 
 #endif
 
