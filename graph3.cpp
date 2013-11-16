@@ -728,10 +728,6 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
    //  be stored as we compute the prim solution
    mst_result mst_for_graph(m_totalNumVerticies, std::vector<int> (3));
 
-   std::cout << "\n\nStarting Prim MST algorithm at node " << originNode << " for " << m_totalNumVerticies << 
-      ((color == nodecolor::NONE) ? "" : ((color == nodecolor::RED) ? " RED" : " BLUE")) <<
-      " nodes" << std::endl;
-
    // initialize the solution 
    for(i=0; i<m_totalNumVerticies; i++)
    {
@@ -806,7 +802,7 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
          break;
       }
 
-      std::cout << "adding point " << lowest_cost_node_this_iteration << " to solution" << std::endl;
+      // std::cout << "adding point " << lowest_cost_node_this_iteration << " to solution" << std::endl;
 
       // add a newly found lowest node to the solution
       mst_for_graph[solution_points_found][DST_NODENUM_IDX] = lowest_cost_node_this_iteration;
@@ -1390,10 +1386,10 @@ bool Graph::mstIncludesRow(unsigned int row, std::vector< int > *pMstVector)
                    continue;
                 }
 
-                std::cout << "color at (" << choice_column << "," << choice_row << ")" << " is " <<
-                   (G.getNodeColor(G.getNodeNumber(choice_row, choice_column)) == nodecolor::RED ? "RED" : 
-                      G.getNodeColor(G.getNodeNumber(choice_row, choice_column)) == nodecolor::BLUE ? "BLUE" :
-                      "NONE") << std::endl;
+                // std::cout << "color at (" << choice_column << "," << choice_row << ")" << " is " <<
+                //    (G.getNodeColor(G.getNodeNumber(choice_row, choice_column)) == nodecolor::RED ? "RED" : 
+                //       G.getNodeColor(G.getNodeNumber(choice_row, choice_column)) == nodecolor::BLUE ? "BLUE" :
+                //       "NONE") << std::endl;
              
 
                 // check to see if the node already has a color
@@ -1435,21 +1431,7 @@ bool Graph::mstIncludesRow(unsigned int row, std::vector< int > *pMstVector)
 
           G.doPrim( G.getNodeNumber((choice_row-1), (choice_column-1)), 
              G.getNodeColor(G.getNodeNumber((choice_row-1), (choice_column-1))),
-                &mst_solution_vec);
-
-          for(int i=0; i<mst_solution_vec.size(); i++)
-          {
-             std::cout << mst_solution_vec[i] << std::endl;
-          }
-
-          if(hex_players[player]->getPlayerColor() == nodecolor::RED)
-          {
-             std::cout << "evaluating red for row 0" << std::endl;
-             std::cout << G.mstIncludesRow(0, &mst_solution_vec) << std::endl;
-             std::cout << "evaluating red for row " << G.getGraphHexDimension()-1 << std::endl;
-             std::cout << G.mstIncludesRow(G.getGraphHexDimension()-1, &mst_solution_vec) << std::endl;
-          }
-          
+             &mst_solution_vec, false);
 
           // now see if we have a winner
           if(hex_players[player]->getPlayerColor() == nodecolor::RED)
@@ -1479,7 +1461,7 @@ bool Graph::mstIncludesRow(unsigned int row, std::vector< int > *pMstVector)
 
     }while(true);
 
-    std::cout << (we_have_a_winner == nodecolor::BLUE ? "\e[5;1;36mBLUE\e[0m" : "\e[5;1;31mRED\e[0m") << " WINS!!!" << std::endl;
+    std::cout << (we_have_a_winner == nodecolor::BLUE ? "\e[5;1;36mBLUE\e[0m" : "\e[5;1;31mRED\e[0m") << " WINS!!!\n\n" << std::endl;
 
 #endif
 
