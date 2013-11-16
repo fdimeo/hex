@@ -1,3 +1,14 @@
+//====================================================================
+//
+//  THIS PROGRAM MUST BE COMPILED WIH THE C++11 extensions
+//
+//  Compiled using Gnu compiler version 4.8
+//  
+//  g++ graph3.cpp -std=C++11 -o graph3
+//
+//====================================================================
+
+
 #include <iostream>
 #include <map>
 #include <vector>
@@ -365,21 +376,16 @@ Graph::Graph(unsigned int hexGraphDimension)
 
       for(int nodeInRow=0; nodeInRow < hexGraphDimension; nodeInRow++)
       {
-         // std::cout << "processing node at location (" << row << ")(" << nodeInRow << ") Node: " << (((row) * hexGraphDimension) + nodeInRow) << std::endl;
-         //each node gets up to 6 edges...
          for (int rowNeighbor = -1; rowNeighbor < 2; rowNeighbor++ )  //row above, this row, and next row
          {
             for (int neighbor_index = 0; neighbor_index < 2; neighbor_index++)  // neighbor to the left and right
             {
 
+               // ignore the exception cases
                if(((rowNeighbor + row) < 0) || (rowNeighbor + row) > (hexGraphDimension - 1)) continue;
                if((( neighbor_array[rowNeighbor+1][neighbor_index] + nodeInRow ) < 0) || (( neighbor_array[rowNeighbor+1][neighbor_index] + nodeInRow ) > (hexGraphDimension - 1))) continue;
   
-               // std::cout << "adding edge from " << ((row * hexGraphDimension) + nodeInRow) 
-               //           << " to " <<
-               //    (((rowNeighbor + row) * hexGraphDimension) + ((neighbor_array[rowNeighbor+1][neighbor_index] + nodeInRow ))) << std
-               // ::endl;
-
+               // add the node to the graph
                addEdge(((row * hexGraphDimension) + nodeInRow), 
                   (((rowNeighbor + row) * hexGraphDimension) + ((neighbor_array[rowNeighbor+1][neighbor_index] + nodeInRow ))),1);
             }
@@ -755,25 +761,16 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
       unsigned int lowest_cost_node_this_iteration = (-1);
       unsigned int lowest_cost_src_node_this_iteration = (-1);
 
-      //      std::cout << "iteration number " << i << std::endl;
-
+      // iterate through all the solution points
       for(int j=0; j<solution_points_found; j++)
       {
 
          // find the node info for the node being examined (this lookup cannot fail)
          node_type::iterator itNode=graphNodes.find(mst_for_graph[j][DST_NODENUM_IDX]);
         
-         //         std::cout << "examining node number " << mst_for_graph[j][DST_NODENUM_IDX] << std::endl;
-
          // look through the edges of all the nodes in the solution so far
          for(edge_type::iterator itEdge=itNode->second->m_edges.begin(); itEdge != itNode->second->m_edges.end(); ++itEdge)
          {
-
-            // std::cout << "examining edge to node " << itEdge->first << std::endl;
-            // std::cout << "visited " << isNodeVisited(itEdge->first) << std::endl;
-            // std::cout << "color " << (getNodeColor(itEdge->first) == nodecolor::NONE ? "NONE" :
-            //    (getNodeColor(itEdge->first) == nodecolor::RED ? "RED" : "BLUE")) << std::endl;
-
 
             // don't look at connected nodes that are already in the solution (aka visited) OR
             //  nodes that aren't the right color for this tree
@@ -786,8 +783,6 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
             // if so, then record it
             if((itEdge->second) < lowest_cost_edge_this_iteration)
             {
-               // std::cout << "found a node!" << std::endl;
-
                lowest_cost_edge_this_iteration = itEdge->second;
                lowest_cost_node_this_iteration = itEdge->first;
                lowest_cost_src_node_this_iteration = itNode->first;
@@ -800,14 +795,13 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
          break;
       }
 
-      // std::cout << "adding point " << lowest_cost_node_this_iteration << " to solution" << std::endl;
-
       // add a newly found lowest node to the solution
       mst_for_graph[solution_points_found][DST_NODENUM_IDX] = lowest_cost_node_this_iteration;
       mst_for_graph[solution_points_found][SRC_NODENUM_IDX] = lowest_cost_src_node_this_iteration;
       mst_for_graph[solution_points_found][EDGEWEIGHT_IDX] = lowest_cost_edge_this_iteration;
       setNodeVisited(lowest_cost_node_this_iteration);
 
+      // if the caller wanted the results, the record them
       if(pSolutionVector) pSolutionVector->push_back(mst_for_graph[solution_points_found][DST_NODENUM_IDX]);
 
       solution_points_found++;
@@ -844,8 +838,6 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
    bool validRouteFoundToDestination = false;
    unsigned int closedNodeNum = originNode;
 
-   // std::cout << "---Running shortest path algorithm from node "<<originNode << " to node " << destNode << std::endl;
-
    // initialize the outcome
    pathCost = 0;
    pathList->clear();
@@ -874,7 +866,6 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
    {
       int numNodesAddedToOpenSet = 0;
          
-      // std::cout << "New closed node: " << closedNodeNum << std::endl;
       //
       // add the connected nodes from this node to the open set (Step N+1)
       //
@@ -882,7 +873,6 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
 
       unsigned int closedNodeCost = itGraphNode->second->m_totalCost;
 
-      // std::cout << "The closed node cost is "<< closedNodeCost << std::endl;
 
       // get all the nodes connected to this one and 
       // adjust the costs and (from node) values of each connected node
@@ -894,8 +884,6 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
 
          // first, mark this node as visited
          itGraphNode->second->setVisited();
-
-         //         std::cout << "Examining node " << itGraphEdge->first << std::endl;
 
          std::map<int, graphPoint* >::iterator itNextEdgeNode = graphNodes.find(itGraphEdge->first);
 
@@ -924,19 +912,12 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
              itNextEdgeNode->second->m_viaNode = closedNodeNum;
 
 
-             // std::cout << "found new lower cost (" << itNextEdgeNode->second->getPointCost() 
-             //           << ") to node " << itGraphEdge->first << " from node " 
-             //           << closedNodeNum << std::endl;
-
           } 
        }
-
-       // std::cout << "Openset now has " << openSet.size() << " members " << std::endl;
 
        //if we didn't add any new members to the openset and it's empty, we are done
        if ( (openSet.size() == 0) &&  (numNodesAddedToOpenSet == 0) )
        {
-          //          std::cout << "openset is empty" << std::endl;
           break;
        }
 
@@ -951,17 +932,11 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
 
           std::map<int, graphPoint* >::iterator itGraphNode = graphNodes.find(openSet[i]);
 
-          // std::cout << "i: " << i << " openset[i]: " << openSet[i] <<" nodenum: " <<  
-          //    itGraphNode->second->m_nodeNumber << " cost: " << itGraphNode->second->m_totalCost
-          //           << std::endl;
-
           if((i==0) || (itGraphNode->second->m_totalCost < lowest_cost_val ))
           {
-
              lowest_cost_node = itGraphNode->second->m_nodeNumber;
              lowest_cost_val = itGraphNode->second->m_totalCost;
              lowest_cost_index = i;
-             // std::cout << "found new lowest cost node : " << lowest_cost_node << std::endl;
           }
        }
 
@@ -970,31 +945,20 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
        closedNodeNum = lowest_cost_node;
 
        // remove that node from the open set
-       // std::cout << "deleting node: " << lowest_cost_node << std::endl;
-
        for(std::vector<unsigned int>::iterator vit = openSet.begin(); vit != openSet.end(); ++vit)
        {
 
-          // std::cout << "lowest_cost_node is: " << lowest_cost_node << " and found openSet member number " << *vit << std::endl;
-
           if (*vit == lowest_cost_node)
           {
-             // std::cout << "erasing member!" << std::endl;
              openSet.erase(vit);
              break;
           }
        }
 
-       // std::cout << "Post delete: Openset now has " << openSet.size() << " members " << std::endl;
-
-
-       //if that node is the dest node, we have succeeded and we are done
+        //if that node is the dest node, we have succeeded and we are done
        if (closedNodeNum == destNode)
        {
           validRouteFoundToDestination = true;
-          // std::cout << "***Found a route to the destination node!" << std::endl;
-
-
           break;
        }
 
@@ -1025,23 +989,13 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
           // if we've added the orig to the route record, then we're done
           if(routeNode == originNode) break;
 
-          //         std::cout << "route reclaimation looking for node " << routeNode << std::endl;
-          //         std::cout << "route reclaimation found node " << 
-          //            graphNodes.find(routeNode)->second->m_nodeNumber << std::endl;
-
           // remember the "from" node for the cost computation
           lastRouteNode = routeNode;
 
           // find the "next" node
           routeNode = graphNodes.find(routeNode)->second->m_viaNode;
 
-          //         std::cout << "route reclaimation found viaNode..." << routeNode << std::endl;
-
           // record this hop in the total cost of the path
-
-          // std::cout << "Cost of route from " << routeNode << " to " << lastRouteNode << 
-          //    " is " << getEdgeValue(routeNode, lastRouteNode) << std::endl;
-
           pathCost += getEdgeValue(routeNode, lastRouteNode);
 
           
@@ -1386,12 +1340,6 @@ bool Graph::mstIncludesRow(unsigned int row, std::vector< int > *pMstVector)
                    std::cout << "you must choose a row between 1 and " << (G.getGraphHexDimension()) << std::endl;
                    continue;
                 }
-
-                // std::cout << "color at (" << choice_column << "," << choice_row << ")" << " is " <<
-                //    (G.getNodeColor(G.getNodeNumber(choice_row, choice_column)) == nodecolor::RED ? "RED" : 
-                //       G.getNodeColor(G.getNodeNumber(choice_row, choice_column)) == nodecolor::BLUE ? "BLUE" :
-                //       "NONE") << std::endl;
-             
 
                 // check to see if the node already has a color
                 if(G.getNodeColor(G.getNodeNumber(choice_row-1, choice_column-1)) == nodecolor::NONE)
