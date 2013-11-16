@@ -95,7 +95,8 @@ public:
    void resetNodeVisitedAll();
 
    void doDijkstra( unsigned int originNode, unsigned int destNode, std::list<unsigned int> *pathResult, int &pathCost);
-   bool doPrim( unsigned int originNode, nodecolor color, bool printSolution);
+   bool doPrim( unsigned int originNode, nodecolor color,  std::vector< int > *pVectorMSTNodeResult, bool printSolution);
+
    unsigned int getGraphHexDimension();
 
    int getNodeNumber(unsigned int rowNumber, unsigned int nodeNumberInRow); // compute the absolute node number given the row and node number in that row
@@ -712,7 +713,7 @@ const int EDGEWEIGHT_IDX = 2;
 // The result of executing this method is to compute and print out the MST solution
 //
 //============================================================================================
-bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, bool printSolution = true)
+bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, std::vector< int > *pSolutionVector = NULL, bool printSolution = true)
 {
 
    int i;
@@ -742,6 +743,8 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
    mst_for_graph[0][SRC_NODENUM_IDX] = originNode;
    mst_for_graph[0][DST_NODENUM_IDX] = originNode;
    mst_for_graph[0][EDGEWEIGHT_IDX] = 0;
+   if(pSolutionVector) pSolutionVector->push_back(mst_for_graph[0][DST_NODENUM_IDX]);
+
    setNodeVisited(originNode);
 
 
@@ -807,6 +810,8 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
       mst_for_graph[solution_points_found][SRC_NODENUM_IDX] = lowest_cost_src_node_this_iteration;
       mst_for_graph[solution_points_found][EDGEWEIGHT_IDX] = lowest_cost_edge_this_iteration;
       setNodeVisited(lowest_cost_node_this_iteration);
+
+      if(pSolutionVector) pSolutionVector->push_back(mst_for_graph[solution_points_found][DST_NODENUM_IDX]);
 
       solution_points_found++;
 
@@ -1401,9 +1406,16 @@ unsigned int Player::getPlayerIndex()
           // if the BLUE player has MST nodes on the east and west edges of the graph, then they win
           // else...PLAY ON
 
+          std::vector< int > mst_solution_set;
+
           G.doPrim( G.getNodeNumber((choice_row-1), (choice_column-1)), 
-             G.getNodeColor(G.getNodeNumber((choice_row-1), (choice_column-1)))
-                  );
+             G.getNodeColor(G.getNodeNumber((choice_row-1), (choice_column-1))),
+                &mst_solution_set);
+
+          for(int i=0; i<mst_solution_set.size(); i++)
+          {
+             std::cout << mst_solution_set[i] << std::endl;
+          }
 
        }
 
