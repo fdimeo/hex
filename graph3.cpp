@@ -323,7 +323,7 @@ Graph::Graph(unsigned int hexGraphDimension)
    {
       for(int nodeInRow=0; nodeInRow < hexGraphDimension; nodeInRow++)
       {
-         addNode((row * hexGraphDimension) + nodeInRow);
+         addNode(getNodeNumber(row ,nodeInRow));
       }
    }
 
@@ -589,7 +589,7 @@ void Graph::setNodeColor(unsigned int nodeNumber, enum nodecolor color)
 
    if( it != graphNodes.end())
    {
-      it->second->m_nodeColor;
+      it->second->m_nodeColor = color;
    }
 
 }
@@ -993,7 +993,7 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
                   {
                      // we're printing the even row 
                      // first the node
-                     out << ((g.getNodeColor(nodeNumber) == (nodecolor::NONE)) ? "o" : (g.getNodeColor(nodeNumber) == (nodecolor::RED)) ? "X" : "O");
+                     out << ((g.getNodeColor(nodeNumber) == (nodecolor::NONE)) ? "*" : (g.getNodeColor(nodeNumber) == (nodecolor::RED)) ? "\e[1;31mX\e[0m" : "\e[1;36mO\e[0m");
                      
                      // then the neighor on this row
                      int neighborNodeNumber = g.getNodeNumber(row, col+1);
@@ -1001,7 +1001,7 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
                      // out << "node " << nodeNumber << "neighbor" << neighborNodeNumber << std::endl;
                      if(neighborNodeNumber != -1)
                      {
-                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? " = " : " ");
+                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "\e[1;33m - \e[0m" : " ");
                      }
                                                                    
                   }
@@ -1011,7 +1011,7 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
                      int neighborNodeNumber = g.getNodeNumber(row+1, col-1);
                      if(neighborNodeNumber != -1)
                      {
-                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "/ " : "  ");
+                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "\e[1;33m/ \e[0m" : "  ");
                      }
                      else
                      {
@@ -1023,7 +1023,7 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
                      if(neighborNodeNumber != -1)
                      {
                         //                        out << "evaluating edge: " << nodeNumber << " to " << neighborNodeNumber << " cost " << g.hasEdge(nodeNumber, neighborNodeNumber) << std::endl;
-                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "\\ " : "  ");
+                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "\e[1;33m\\ \e[0m" : "  ");
                      }
 
 
@@ -1138,7 +1138,12 @@ std::ostream &operator<< (std::ostream &cout, std::list<unsigned int> *path)
     const char print_graph_entry = 'n';
 
     // instantiate a graph from the local file (called graph.txt)
-    Graph G(3); // a new graph 3x3 hex graph
+    Graph G(11); // a new graph 3x3 hex graph
+
+    G.setNodeColor(20, nodecolor::RED);
+    G.setNodeColor(40, nodecolor::RED);
+    G.setNodeColor(22, nodecolor::BLUE);
+    G.setNodeColor(41, nodecolor::BLUE);
 
     // print out the whole graph, but only if we've compiled to do so
     G.printGraph();
