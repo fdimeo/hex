@@ -1261,42 +1261,59 @@ unsigned int Player::getPlayerIndex()
        for(int player=0; player < 2; player++)
        {
           unsigned int choice_row, choice_column;
-
           do
           {
-             std::cout << ((hex_players[player]->getPlayerColor() == nodecolor::RED) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a column: ";
-             std::cin >> choice_column;
+             // assume that we'll have a bad choice and need to try again
+             bool valid_choice = false;
 
-             if((choice_column == 0) || (choice_column > G.getGraphHexDimension()))
+             do
              {
-                std::cout << "you must choose a column between 0 and " << (G.getGraphHexDimension()) << std::endl;
-                continue;
-             }
+                std::cout << ((hex_players[player]->getPlayerColor() == nodecolor::RED) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a column: ";
+                std::cin >> choice_column;
 
-             break;
-          }while(true);
+                if((choice_column == 0) || (choice_column > G.getGraphHexDimension()))
+                {
+                   std::cout << "you must choose a column between 0 and " << (G.getGraphHexDimension()) << std::endl;
+                   continue;
+                }
 
-          do
-          {
-             std::cout << ((hex_players[player]->getPlayerColor() == nodecolor::RED) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a row: ";
-             std::cin >> choice_row;
-
-             if((choice_row == 0) || (choice_row > G.getGraphHexDimension()))
-             {
-                std::cout << "you must choose a row between 1 and " << (G.getGraphHexDimension()) << std::endl;
-                continue;
-             }
-
-             // check to see if the node already has a color
-             if(G.getNodeColor(G.getNodeNumber(choice_row, choice_column)) == nodecolor::NONE)
-             {
                 break;
-             }
-             else
+             }while(true);
+
+             do
              {
-                std::cout << "Your tile choice has already been taken, please try again" << std::endl;
-                continue;
-             }
+                std::cout << ((hex_players[player]->getPlayerColor() == nodecolor::RED) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a row: ";
+                std::cin >> choice_row;
+
+                if((choice_row == 0) || (choice_row > G.getGraphHexDimension()))
+                {
+                   std::cout << "you must choose a row between 1 and " << (G.getGraphHexDimension()) << std::endl;
+                   continue;
+                }
+
+                std::cout << "color at (" << choice_column << "," << choice_row << ")" << " is " <<
+                   (G.getNodeColor(G.getNodeNumber(choice_row, choice_column)) == nodecolor::RED ? "RED" : 
+                      G.getNodeColor(G.getNodeNumber(choice_row, choice_column)) == nodecolor::BLUE ? "BLUE" :
+                      "NONE") << std::endl;
+             
+
+                // check to see if the node already has a color
+                if(G.getNodeColor(G.getNodeNumber(choice_row-1, choice_column-1)) == nodecolor::NONE)
+                {
+                   valid_choice = true;
+                }
+                else
+                {
+                   std::cout << "Your tile choice has already been taken, please try again" << std::endl;
+                 
+                }
+
+                // either try again, or we're done
+                break;
+
+             }while(true);
+
+             if(valid_choice) break;
 
           }while(true);
 
