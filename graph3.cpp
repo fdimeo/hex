@@ -64,6 +64,7 @@ public:
    int getNodeValue(unsigned int nodeNumber);
    void setNodeColor(unsigned int nodeNumber, nodecolor color);
    nodecolor getNodeColor(unsigned int nodeNumber);
+   bool isNodeInGraph(unsigned int nodeNumber);
    void addEdge(unsigned int sourceNodeNumber, unsigned int destNodeNumber, unsigned int edgeWeight);
    bool hasEdge(unsigned int sourceNodeNumber, unsigned int destNodeNumber);
 
@@ -79,7 +80,7 @@ public:
    void doDijkstra( unsigned int originNode, unsigned int destNode, std::list<unsigned int> *pathResult, int &pathCost);
    void doPrim( unsigned int originNode);
 
-   unsigned int getNodeNumber(unsigned int rowNumber, unsigned int nodeNumberInRow); // compute the absolute node number given the row and node number in that row
+   int getNodeNumber(unsigned int rowNumber, unsigned int nodeNumberInRow); // compute the absolute node number given the row and node number in that row
 
    friend std::ostream& operator<<(std::ostream &out, Graph &g);  // prints the graph 
 
@@ -98,7 +99,7 @@ class graphPoint
 
 private:
    unsigned int m_nodeNumber;                    // a unique identifier for this node
-   std::map<unsigned int, unsigned int> m_edges; // a vector of all edges from the node
+   std::map<unsigned int, unsigned int> m_edges; // a vector of all edges from the node (other node number, cost)
    unsigned int m_viaNode;                       // the "from node" to this node for the m_totalCost recorded
    int    m_totalCost;                           // total path cost for this instance
    bool   m_visited;                             // has this instance been visited in the algorthim?
@@ -281,7 +282,6 @@ int graphPoint::getEdgeValue(unsigned int node)
       // find the edge.  If not found, return a cost of -1 (this mean infinity)
       if((it = m_edges.find(node)) != m_edges.end())
       {
-
          // std::cout << "Found a cost of : " << it->second << std::endl;
 
          retval = (it->second);
@@ -292,6 +292,7 @@ int graphPoint::getEdgeValue(unsigned int node)
       return retval;
 
 }
+
 
 
 //*****************************************************************
@@ -434,7 +435,7 @@ void Graph::addEdge(unsigned int sourceNodeNumber, unsigned int destNodeNumber, 
 
 bool Graph::hasEdge(unsigned int sourceNodeNumber, unsigned int destNodeNumber)
 {
-   return (graphNodes.find(sourceNodeNumber)->second->getEdgeValue(sourceNodeNumber) == destNodeNumber);
+    return (graphNodes.find(sourceNodeNumber)->second->getEdgeValue(destNodeNumber) > 0);
 }
 
 
@@ -488,6 +489,20 @@ int Graph::getNodeValue(unsigned int nodeNumber)
 
     return retval;
  }
+
+bool Graph::isNodeInGraph(unsigned int nodeNumber)
+ {
+    int retval = false;
+    std::map<int, graphPoint* >::iterator it = graphNodes.find(nodeNumber);
+
+    if( it != graphNodes.end())   
+    {
+      retval = true;
+    }
+
+    return retval;
+ }
+
 
 // int Graph::setEdgeValue(unsigned int sourceNodeNumber,unsigned int destNodeNumber, unsigned int weight )
 // {
@@ -543,9 +558,16 @@ void Graph::setNodeVisited(unsigned int nodeNumber)
 
 }
 
-inline unsigned int Graph::getNodeNumber(unsigned int rowNumber, unsigned int nodeNumberInRow)
+inline int Graph::getNodeNumber(unsigned int rowNumber, unsigned int nodeNumberInRow)
 {
-   return ((rowNumber * m_hexGraphDimension) + nodeNumberInRow);
+   if((rowNumber > m_hexGraphDimension) || ( nodeNumberInRow > m_hexGraphDimension))
+   {
+      return -1;
+   }
+   else
+   {
+      return ((rowNumber * m_hexGraphDimension) + nodeNumberInRow);
+   }
 }
 
 enum nodecolor Graph::getNodeColor(unsigned int nodeNumber)
@@ -934,6 +956,15 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
 
 }
 
+inline std::ostream &right_shift_row(std::ostream &out, unsigned int row)
+{
+   for(int spaces=0; spaces<row*2; spaces++)
+   {
+      out << " ";
+   }
+      return out;
+}
+
 std::ostream& operator<<(std::ostream &out, Graph &g) 
 {
    // print the graph
@@ -951,29 +982,56 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
       {
          for(int rowIter=0; rowIter<2; rowIter++)
          {
+            right_shift_row(out, row);
             for(int col=0; col<g.m_hexGraphDimension;col++)
             {
                unsigned int nodeNumber = g.getNodeNumber(row, col);
-               out << "node number is" << nodeNumber << std::endl;
-               if(g.getNodeValue(nodeNumber) != -1)
+
+               if(g.isNodeInGraph(nodeNumber))
                {
                   if(!rowIter)
                   {
                      // we're printing the even row 
-                     out << 
-                        (g.getNodeColor(nodeNumber) == (nodecolor::NONE)) ?
-                        "." : (g.getNodeColor(nodeNumber) == (nodecolor::RED)) ? "X" : "O";
-                                         
+                     // first the node
+                     out << ((g.getNodeColor(nodeNumber) == (nodecolor::NONE)) ? "o" : (g.getNodeColor(nodeNumber) == (nodecolor::RED)) ? "X" : "O");
+                     
+                     // then the neighor on this row
+                     int neighborNodeNumber = g.getNodeNumber(row, col+1);
+
+                     // out << "node " << nodeNumber << "neighbor" << neighborNodeNumber << std::endl;
+                     if(neighborNodeNumber != -1)
+                     {
+                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? " = " : " ");
+                     }
+                                                                   
                   }
                   else
                   {
-                     // print the odd row
+                     // print the between rows
+                     int neighborNodeNumber = g.getNodeNumber(row+1, col-1);
+                     if(neighborNodeNumber != -1)
+                     {
+                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "/ " : "  ");
+                     }
+                     else
+                     {
+                        out << " ";
+                     }
+
+                     // print the between rows
+                     neighborNodeNumber = g.getNodeNumber(row+1, col);
+                     if(neighborNodeNumber != -1)
+                     {
+                        //                        out << "evaluating edge: " << nodeNumber << " to " << neighborNodeNumber << " cost " << g.hasEdge(nodeNumber, neighborNodeNumber) << std::endl;
+                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "\\ " : "  ");
+                     }
+
 
                   }
                }
             }
+            out << "\n";
          }
-         out << std::endl;
       }
    }
 
