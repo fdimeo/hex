@@ -91,11 +91,17 @@ public:
    unsigned int getEdgeCount(void);
    bool isNodeVisited(unsigned int nodeNumber);
    void setNodeVisited(unsigned int nodeNumber);
+   void resetNodeVisited(unsigned int nodeNumber);
+   void resetNodeVisitedAll();
+
    void doDijkstra( unsigned int originNode, unsigned int destNode, std::list<unsigned int> *pathResult, int &pathCost);
    bool doPrim( unsigned int originNode, nodecolor color, bool printSolution);
    unsigned int getGraphHexDimension();
 
    int getNodeNumber(unsigned int rowNumber, unsigned int nodeNumberInRow); // compute the absolute node number given the row and node number in that row
+
+   int getNodeRow(unsigned int nodeNumber);
+   int getNodeColumn(unsigned int nodeNumber);
 
    friend std::ostream& operator<<(std::ostream &out, Graph &g);  // prints the graph 
 
@@ -134,6 +140,7 @@ public:
    void setPointCost (int cost);
    bool modifyPoint (int cost, bool visited);
    void setVisited ();
+   void resetVisited ();
    bool getVisited ();
    void cleanNode();
 
@@ -172,6 +179,12 @@ void graphPoint::setVisited ()
 {
    m_visited = true;
 }
+
+void graphPoint::resetVisited ()
+{
+   m_visited = false;
+}
+
 
 bool graphPoint::getVisited ()
 {
@@ -418,6 +431,7 @@ void Graph::addNode(unsigned int nodeNumber)
       std::cout << "adding node " << nodeNumber << std::endl;
       graphNodes[nodeNumber] = new graphPoint(nodeNumber);
       m_totalNumVerticies++;
+      graphNodes[nodeNumber]->resetVisited();
       m_originNode = -1;
    }
 }
@@ -578,17 +592,52 @@ void Graph::setNodeVisited(unsigned int nodeNumber)
 
 }
 
-inline int Graph::getNodeNumber(unsigned int rowNumber, unsigned int nodeNumberInRow)
+void Graph::resetNodeVisited(unsigned int nodeNumber)
 {
-   if((rowNumber > m_hexGraphDimension) || ( nodeNumberInRow > m_hexGraphDimension))
+   std::map<int, graphPoint* >::iterator it = graphNodes.find(nodeNumber);
+
+   if( it != graphNodes.end())
+   {
+      it->second->resetVisited();
+   }
+
+}
+
+
+void Graph::resetNodeVisitedAll()
+{
+   for(std::map<int, graphPoint* >::iterator it = graphNodes.begin(); it != graphNodes.end(); ++it)
+   {
+      it->second->resetVisited();
+   }
+}
+
+
+inline int Graph::getNodeNumber(unsigned int rowNumber, unsigned int colNumber)
+{
+   if((rowNumber > m_hexGraphDimension) || ( colNumber > m_hexGraphDimension))
    {
       return -1;
    }
    else
    {
-      return ((rowNumber * m_hexGraphDimension) + nodeNumberInRow);
+      return ((rowNumber * m_hexGraphDimension) + colNumber);
    }
 }
+
+int Graph::getNodeRow(unsigned int nodeNumber)
+{
+   if(nodeNumber > ( m_hexGraphDimension *  m_hexGraphDimension)) return -1;
+   else return (nodeNumber/m_hexGraphDimension);
+}
+
+int Graph::getNodeColumn(unsigned int nodeNumber)
+{
+   if(nodeNumber > ( m_hexGraphDimension *  m_hexGraphDimension)) return -1;
+   else return (nodeNumber%m_hexGraphDimension);
+
+}
+
 
 enum nodecolor Graph::getNodeColor(unsigned int nodeNumber)
 {
@@ -675,7 +724,9 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
    //  be stored as we compute the prim solution
    mst_result mst_for_graph(m_totalNumVerticies, std::vector<int> (3));
 
-   std::cout << "\n\nStarting Prim MST algorithm for " << m_totalNumVerticies << " nodes..." << std::endl;
+   std::cout << "\n\nStarting Prim MST algorithm at node " << originNode << " for " << m_totalNumVerticies << 
+      ((color == nodecolor::NONE) ? "" : ((color == nodecolor::RED) ? " RED" : " BLUE")) <<
+      " nodes" << std::endl;
 
    // initialize the solution 
    for(i=0; i<m_totalNumVerticies; i++)
@@ -683,6 +734,9 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
       mst_for_graph[i][SRC_NODENUM_IDX]=(-1);
       mst_for_graph[i][DST_NODENUM_IDX]=(-1);
    }
+   
+   // clear the visited indicators in all nodes of the graph
+   resetNodeVisitedAll();
 
    // add the origin node to the solved set
    mst_for_graph[0][SRC_NODENUM_IDX] = originNode;
@@ -701,6 +755,7 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
       unsigned int lowest_cost_node_this_iteration = (-1);
       unsigned int lowest_cost_src_node_this_iteration = (-1);
 
+      //      std::cout << "iteration number " << i << std::endl;
 
       for(int j=0; j<solution_points_found; j++)
       {
@@ -708,11 +763,18 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
          // find the node info for the node being examined (this lookup cannot fail)
          node_type::iterator itNode=graphNodes.find(mst_for_graph[j][DST_NODENUM_IDX]);
         
+         //         std::cout << "examining node number " << mst_for_graph[j][DST_NODENUM_IDX] << std::endl;
 
          // look through the edges of all the nodes in the solution so far
          for(edge_type::iterator itEdge=itNode->second->m_edges.begin(); itEdge != itNode->second->m_edges.end(); ++itEdge)
          {
-             
+
+            // std::cout << "examining edge to node " << itEdge->first << std::endl;
+            // std::cout << "visited " << isNodeVisited(itEdge->first) << std::endl;
+            // std::cout << "color " << (getNodeColor(itEdge->first) == nodecolor::NONE ? "NONE" :
+            //    (getNodeColor(itEdge->first) == nodecolor::RED ? "RED" : "BLUE")) << std::endl;
+
+
             // don't look at connected nodes that are already in the solution (aka visited) OR
             //  nodes that aren't the right color for this tree
             if(isNodeVisited(itEdge->first) || getNodeColor(itEdge->first) != color)
@@ -724,7 +786,8 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
             // if so, then record it
             if((itEdge->second) < lowest_cost_edge_this_iteration)
             {
- 
+               // std::cout << "found a node!" << std::endl;
+
                lowest_cost_edge_this_iteration = itEdge->second;
                lowest_cost_node_this_iteration = itEdge->first;
                lowest_cost_src_node_this_iteration = itNode->first;
@@ -732,6 +795,12 @@ bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, 
          }
       }
 
+      if(lowest_cost_node_this_iteration == (-1))
+      {
+         break;
+      }
+
+      std::cout << "adding point " << lowest_cost_node_this_iteration << " to solution" << std::endl;
 
       // add a newly found lowest node to the solution
       mst_for_graph[solution_points_found][DST_NODENUM_IDX] = lowest_cost_node_this_iteration;
@@ -1222,7 +1291,7 @@ unsigned int Player::getPlayerIndex()
     Player *p1 = new Player;
     char players_color_choice;
 
-    std::cout << "Choose a color (R) for Red, (B) for Blue: ";
+    std::cout << "Choose a color \e[1;31m(R) for Red\e[0m, \e[1;36m(B) for Blue\e[0m: ";
     do{
        std::cin >> players_color_choice;
        if((players_color_choice == 'R') || (players_color_choice == 'r'))
@@ -1239,7 +1308,7 @@ unsigned int Player::getPlayerIndex()
        }
        else
        {
-          std::cout << "Please choose either (R)ed or (B)lue..." << std::endl;
+          std::cout << "Please choose either \e[1;31m(R) for Red\e[0m or (\e[1;36m(B) for Blue\e[0m..." << std::endl;
        }
     }while(true);
 
@@ -1308,11 +1377,12 @@ unsigned int Player::getPlayerIndex()
                  
                 }
 
-                // either try again, or we're done
+                // either try again, or we're done, but this is evaluated in the outter do loop
                 break;
 
              }while(true);
 
+             // if the user has made a valid choice, then move on
              if(valid_choice) break;
 
           }while(true);
@@ -1326,6 +1396,14 @@ unsigned int Player::getPlayerIndex()
           std::cout << G << std::endl;
 
           // do we have a winner?
+          // run the spanning tree on the user's last choice
+          // if the RED player has MST nodes on north and south edges of the graph then they win
+          // if the BLUE player has MST nodes on the east and west edges of the graph, then they win
+          // else...PLAY ON
+
+          G.doPrim( G.getNodeNumber((choice_row-1), (choice_column-1)), 
+             G.getNodeColor(G.getNodeNumber((choice_row-1), (choice_column-1)))
+                  );
 
        }
 
