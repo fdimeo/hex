@@ -1000,7 +1000,8 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
                   {
                      // we're printing the even row 
                      // first the node
-                     out << ((g.getNodeColor(nodeNumber) == (nodecolor::NONE)) ? "*" : (g.getNodeColor(nodeNumber) == (nodecolor::RED)) ? "\e[1;31mX\e[0m" : "\e[1;36mO\e[0m");
+                     out << ((g.getNodeColor(nodeNumber) == (nodecolor::NONE)) ? 
+                        "*" : (g.getNodeColor(nodeNumber) == (nodecolor::RED)) ? "\e[1;31mX\e[0m" : "\e[1;36mO\e[0m");
                      
                      // then the neighor on this row
                      int neighborNodeNumber = g.getNodeNumber(row, col+1);
@@ -1041,8 +1042,6 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
                      neighborNodeNumber = g.getNodeNumber(row+1, col);
                      if(neighborNodeNumber != -1)
                      {
-                        //                        out << "evaluating edge: " << nodeNumber << " to " << neighborNodeNumber << " cost " << g.hasEdge(nodeNumber, neighborNodeNumber) << std::endl;
-                       // out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "\e[1;33m\\ \e[0m" : "  ");
                         out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? 
                            (g.getNodeColor(nodeNumber) == g.getNodeColor(neighborNodeNumber) ? 
                               (g.getNodeColor(nodeNumber) == nodecolor::NONE ? 
