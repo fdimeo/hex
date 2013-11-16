@@ -94,6 +94,9 @@ public:
    void resetNodeVisited(unsigned int nodeNumber);
    void resetNodeVisitedAll();
 
+   bool mstIncludesColumn(unsigned int column, std::vector< int > *pMstVector);
+   bool mstIncludesRow(unsigned int row, std::vector< int > *pMstVector);
+
    void doDijkstra( unsigned int originNode, unsigned int destNode, std::list<unsigned int> *pathResult, int &pathCost);
    bool doPrim( unsigned int originNode, nodecolor color,  std::vector< int > *pVectorMSTNodeResult, bool printSolution);
 
@@ -1233,6 +1236,25 @@ unsigned int Player::getPlayerIndex()
    return index;
 }
 
+bool Graph::mstIncludesColumn(unsigned int column, std::vector< int > *pMstVector)
+{
+   for(int i=0; i< pMstVector->size(); i++)
+   {
+      if(getNodeColumn((*pMstVector)[i]) == column) return true;
+   }
+
+   return false;
+}
+
+bool Graph::mstIncludesRow(unsigned int row, std::vector< int > *pMstVector)
+{
+   for(int i=0; i< pMstVector->size(); i++)
+   {
+      if(getNodeRow((*pMstVector)[i]) == row) return true;
+   }
+
+   return false;
+}
 
 
 
@@ -1282,7 +1304,7 @@ unsigned int Player::getPlayerIndex()
     const char print_graph_entry = 'n';
 
     // instantiate a graph from the local file (called graph.txt)
-    Graph G(11); // a new graph 3x3 hex graph
+    Graph G(4); // a new graph 3x3 hex graph
 
 
     std::cout <<"Graph has " << G.getNodeCount() << " nodes and " << G.getEdgeCount() << " indicies" << std::endl;
@@ -1326,6 +1348,9 @@ unsigned int Player::getPlayerIndex()
     p2->setPlayerIndex( p1->getPlayerIndex() ? 0 : 1);
     p2->setPlayerColor(p1->getPlayerColor() == nodecolor::RED ? nodecolor::BLUE : nodecolor::RED);
     hex_players[p2->getPlayerIndex()] = p2;
+
+    // we'll record the winning color here...
+    nodecolor we_have_a_winner = nodecolor::NONE;
 
     do
     {
@@ -1406,20 +1431,56 @@ unsigned int Player::getPlayerIndex()
           // if the BLUE player has MST nodes on the east and west edges of the graph, then they win
           // else...PLAY ON
 
-          std::vector< int > mst_solution_set;
+          std::vector< int > mst_solution_vec;
 
           G.doPrim( G.getNodeNumber((choice_row-1), (choice_column-1)), 
              G.getNodeColor(G.getNodeNumber((choice_row-1), (choice_column-1))),
-                &mst_solution_set);
+                &mst_solution_vec);
 
-          for(int i=0; i<mst_solution_set.size(); i++)
+          for(int i=0; i<mst_solution_vec.size(); i++)
           {
-             std::cout << mst_solution_set[i] << std::endl;
+             std::cout << mst_solution_vec[i] << std::endl;
           }
 
+          if(hex_players[player]->getPlayerColor() == nodecolor::RED)
+          {
+             std::cout << "evaluating red for row 0" << std::endl;
+             std::cout << G.mstIncludesRow(0, &mst_solution_vec) << std::endl;
+             std::cout << "evaluating red for row " << G.getGraphHexDimension()-1 << std::endl;
+             std::cout << G.mstIncludesRow(G.getGraphHexDimension()-1, &mst_solution_vec) << std::endl;
+          }
+          
+
+          // now see if we have a winner
+          if(hex_players[player]->getPlayerColor() == nodecolor::RED)
+          {
+             // check if we have a solution that has both north and south edges
+             if(G.mstIncludesRow(0, &mst_solution_vec) && 
+                G.mstIncludesRow((G.getGraphHexDimension()-1), &mst_solution_vec))
+             {
+                we_have_a_winner = nodecolor::RED;
+                break;
+             }
+          }
+          else
+          {
+             // check if we have a solution that has both east and west edges
+             if(G.mstIncludesColumn(0, &mst_solution_vec) && 
+                G.mstIncludesColumn((G.getGraphHexDimension()-1), &mst_solution_vec))
+             {
+                we_have_a_winner = nodecolor::BLUE;
+                break;
+             }
+          }                              
        }
 
+       // it tough getting out of double whiles without a goto 
+       if(we_have_a_winner != nodecolor::NONE) break;
+
     }while(true);
+
+    std::cout << (we_have_a_winner == nodecolor::BLUE ? "\e[5;1;36mBLUE\e[0m" : "\e[5;1;31mRED\e[0m") << " WINS!!!" << std::endl;
+
 #endif
 
 
