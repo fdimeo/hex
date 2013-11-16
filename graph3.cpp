@@ -1008,7 +1008,13 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
                      // out << "node " << nodeNumber << "neighbor" << neighborNodeNumber << std::endl;
                      if(neighborNodeNumber != -1)
                      {
-                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "\e[1;33m - \e[0m" : " ");
+                        // the UGLIEST nested tri-graph in the history of ugly trigraphs!!!
+                        out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? 
+                           (g.getNodeColor(nodeNumber) == g.getNodeColor(neighborNodeNumber) ? 
+                              (g.getNodeColor(nodeNumber) == nodecolor::NONE ? 
+                                 "\e[1;33m - \e[0m" : 
+                                 (g.getNodeColor(nodeNumber) == nodecolor::RED ? 
+                                    "\e[1;31m - \e[0m" : "\e[1;36m - \e[0m")) : "\e[1;33m - \e[0m" ) : " " );
                      }
                                                                    
                   }
@@ -1018,7 +1024,13 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
                      int neighborNodeNumber = g.getNodeNumber(row+1, col-1);
                      if(neighborNodeNumber != -1)
                      {
-                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "\e[1;33m/ \e[0m" : "  ");
+                       // out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "\e[1;33m/ \e[0m" : "  ");
+                        out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? 
+                           (g.getNodeColor(nodeNumber) == g.getNodeColor(neighborNodeNumber) ? 
+                              (g.getNodeColor(nodeNumber) == nodecolor::NONE ? 
+                                 "\e[1;33m/ \e[0m" : 
+                                 (g.getNodeColor(nodeNumber) == nodecolor::RED ? 
+                                    "\e[1;31m/ \e[0m" : "\e[1;36m/ \e[0m")) : "\e[1;33m/ \e[0m" ) : " " );
                      }
                      else
                      {
@@ -1030,8 +1042,14 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
                      if(neighborNodeNumber != -1)
                      {
                         //                        out << "evaluating edge: " << nodeNumber << " to " << neighborNodeNumber << " cost " << g.hasEdge(nodeNumber, neighborNodeNumber) << std::endl;
-                       out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "\e[1;33m\\ \e[0m" : "  ");
-                     }
+                       // out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? "\e[1;33m\\ \e[0m" : "  ");
+                        out << ((g.hasEdge(nodeNumber, neighborNodeNumber)) ? 
+                           (g.getNodeColor(nodeNumber) == g.getNodeColor(neighborNodeNumber) ? 
+                              (g.getNodeColor(nodeNumber) == nodecolor::NONE ? 
+                                 "\e[1;33m\\ \e[0m" : 
+                                 (g.getNodeColor(nodeNumber) == nodecolor::RED ? 
+                                    "\e[1;31m\\ \e[0m" : "\e[1;36m\\ \e[0m")) : "\e[1;33m\\ \e[0m" ) : " " );
+                      }
 
 
                   }
@@ -1152,20 +1170,21 @@ std::ostream &operator<< (std::ostream &cout, std::list<unsigned int> *path)
 
     do
     {
-       std::cout << "Shall we play a game?" << std::endl;
+       std::cout << "\n\nShall we play a game?" << std::endl;
        std::cout << G << std::endl;
 
        for(int player=0; player < 2; player++)
        {
           unsigned int choice_row, choice_column;
+
           do
           {
-             std::cout << ((player == 0) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a row: ";
-             std::cin >> choice_row;
+             std::cout << ((player == 0) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a column: ";
+             std::cin >> choice_column;
 
-             if(choice_row > G.getGraphHexDimension())
+             if((choice_column == 0) || (choice_column > G.getGraphHexDimension()))
              {
-                std::cout << "you must choose a row between 0 and " << (G.getGraphHexDimension()-1) << std::endl;
+                std::cout << "you must choose a column between 0 and " << (G.getGraphHexDimension()) << std::endl;
                 continue;
              }
 
@@ -1174,12 +1193,12 @@ std::ostream &operator<< (std::ostream &cout, std::list<unsigned int> *path)
 
           do
           {
-             std::cout << ((player == 0) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a column: ";
-             std::cin >> choice_column;
+             std::cout << ((player == 0) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a row: ";
+             std::cin >> choice_row;
 
-             if(choice_column > G.getGraphHexDimension())
+             if((choice_row == 0) || (choice_row > G.getGraphHexDimension()))
              {
-                std::cout << "you must choose a column between 0 and " << (G.getGraphHexDimension()-1) << std::endl;
+                std::cout << "you must choose a row between 1 and " << (G.getGraphHexDimension()) << std::endl;
                 continue;
              }
 
@@ -1188,7 +1207,7 @@ std::ostream &operator<< (std::ostream &cout, std::list<unsigned int> *path)
 
           std::cout << "you chose the node at row " << choice_row << " and column " << choice_column << std::endl;
 
-          G.setNodeColor(G.getNodeNumber(choice_row, choice_column), ((player == 0) ? nodecolor::RED : nodecolor::BLUE));
+          G.setNodeColor(G.getNodeNumber((choice_row-1), (choice_column-1)), ((player == 0) ? nodecolor::RED : nodecolor::BLUE));
       
        }
 
