@@ -2,6 +2,7 @@
 #include <map>
 #include <vector>
 #include <list>
+#include <array>
 #include <ctime>    // standard C library
 #include <cstdlib>  // standard C library
 
@@ -14,6 +15,19 @@ class Graph;
 // node color class
 enum class nodecolor{ 
    NONE, RED, BLUE };
+
+class Player
+{
+private:
+   unsigned int index;   // zero or one
+   nodecolor color;      // nodecolor::RED or nodecolor::BLUE
+
+public:
+   void setPlayerIndex(unsigned int player_index);
+   unsigned int getPlayerIndex();
+   nodecolor setPlayerColor(nodecolor color);
+   nodecolor getPlayerColor();
+};
 
 class ShortestPathAlgo
 {
@@ -78,7 +92,7 @@ public:
    bool isNodeVisited(unsigned int nodeNumber);
    void setNodeVisited(unsigned int nodeNumber);
    void doDijkstra( unsigned int originNode, unsigned int destNode, std::list<unsigned int> *pathResult, int &pathCost);
-   void doPrim( unsigned int originNode);
+   bool doPrim( unsigned int originNode, nodecolor color, bool printSolution);
    unsigned int getGraphHexDimension();
 
    int getNodeNumber(unsigned int rowNumber, unsigned int nodeNumberInRow); // compute the absolute node number given the row and node number in that row
@@ -649,10 +663,13 @@ const int EDGEWEIGHT_IDX = 2;
 // The result of executing this method is to compute and print out the MST solution
 //
 //============================================================================================
-void Graph::doPrim( unsigned int originNode)
+bool Graph::doPrim( unsigned int originNode, nodecolor color = nodecolor::NONE, bool printSolution = true)
 {
 
    int i;
+   bool retval = false;
+
+   if(getNodeColor(originNode) != color) return false;
 
    // initialize the 2dimenstional vector of [numNodes][2] ints. (nodenumber, weight) will
    //  be stored as we compute the prim solution
@@ -696,14 +713,14 @@ void Graph::doPrim( unsigned int originNode)
          for(edge_type::iterator itEdge=itNode->second->m_edges.begin(); itEdge != itNode->second->m_edges.end(); ++itEdge)
          {
              
-            // don't look at connected nodes that are already in the solution (aka visited)
-            if(isNodeVisited(itEdge->first))
+            // don't look at connected nodes that are already in the solution (aka visited) OR
+            //  nodes that aren't the right color for this tree
+            if(isNodeVisited(itEdge->first) || getNodeColor(itEdge->first) != color)
             {
                    continue;
             }
 
-
-            // now check if its the lowest cost so far in this iteration
+             // now check if its the lowest cost so far in this iteration
             // if so, then record it
             if((itEdge->second) < lowest_cost_edge_this_iteration)
             {
@@ -726,22 +743,28 @@ void Graph::doPrim( unsigned int originNode)
 
    }
 
-   // the MST solution is done, now print it out
-   //
-   std::cout << "----------- MST path ---------------" << std::endl;
-
-   unsigned int mst_total_cost = 0;
-
-   // iterate through the solution vector...
-   for(i=1; i<solution_points_found; i++)
+   if(printSolution)
    {
-      std::cout << "Node: " << mst_for_graph[i][SRC_NODENUM_IDX]  << "-->" <<  mst_for_graph[i][DST_NODENUM_IDX]
-               << " \tCost: " << mst_for_graph[i][EDGEWEIGHT_IDX] <<std::endl;
-      mst_total_cost += mst_for_graph[i][EDGEWEIGHT_IDX];
+
+      // the MST solution is done, now print it out
+      //
+      std::cout << "----------- MST path ---------------" << std::endl;
+
+      unsigned int mst_total_cost = 0;
+
+      // iterate through the solution vector...
+      for(i=1; i<solution_points_found; i++)
+      {
+         std::cout << "Node: " << mst_for_graph[i][SRC_NODENUM_IDX]  << "-->" <<  mst_for_graph[i][DST_NODENUM_IDX]
+                   << " \tCost: " << mst_for_graph[i][EDGEWEIGHT_IDX] <<std::endl;
+         mst_total_cost += mst_for_graph[i][EDGEWEIGHT_IDX];
+      }
+
+      // don't forget the total MST cost!
+      std::cout << "\nTotal MST cost: " << mst_total_cost << std::endl;
    }
 
-   // don't forget the total MST cost!
-   std::cout << "\nTotal MST cost: " << mst_total_cost << std::endl;
+   return true;
 
 }
 
@@ -1116,6 +1139,29 @@ std::ostream &operator<< (std::ostream &cout, std::list<unsigned int> *path)
    return cout;
 }
 
+nodecolor Player::getPlayerColor()
+{
+   return color;
+}
+
+nodecolor Player::setPlayerColor(nodecolor playerColor)
+{
+   color = playerColor;
+}
+
+void Player::setPlayerIndex(unsigned int player_index)
+{
+   index = player_index;
+}
+
+unsigned int Player::getPlayerIndex()
+{
+   return index;
+}
+
+
+
+
 //#define USING_KNOWN_GRAPH
 
  int main()
@@ -1167,18 +1213,58 @@ std::ostream &operator<< (std::ostream &cout, std::list<unsigned int> *path)
 
     std::cout <<"Graph has " << G.getNodeCount() << " nodes and " << G.getEdgeCount() << " indicies" << std::endl;
 
+    std::array< Player *, 2 > hex_players;
+
+    std::cout << "\n\nShall we play a game?" << std::endl;
+    std::cout << G << std::endl;
+
+    // First, let player one choose the color he wants
+    Player *p1 = new Player;
+    char players_color_choice;
+
+    std::cout << "Choose a color (R) for Red, (B) for Blue: ";
+    do{
+       std::cin >> players_color_choice;
+       if((players_color_choice == 'R') || (players_color_choice == 'r'))
+       {
+          p1->setPlayerColor(nodecolor::RED);
+          p1->setPlayerIndex(1);
+          break;
+       }
+       else if ((players_color_choice == 'B') || (players_color_choice == 'b'))
+       {
+          p1->setPlayerColor(nodecolor::BLUE);
+          p1->setPlayerIndex(0);             
+          break;
+       }
+       else
+       {
+          std::cout << "Please choose either (R)ed or (B)lue..." << std::endl;
+       }
+    }while(true);
+
+    // store the player instance
+    hex_players[p1->getPlayerIndex()] = p1;
+
+          
+    // Second player gets the color that's left...
+    Player *p2 = new Player;
+    p2->setPlayerIndex( p1->getPlayerIndex() ? 0 : 1);
+    p2->setPlayerColor(p1->getPlayerColor() == nodecolor::RED ? nodecolor::BLUE : nodecolor::RED);
+    hex_players[p2->getPlayerIndex()] = p2;
+
     do
     {
-       std::cout << "\n\nShall we play a game?" << std::endl;
-       std::cout << G << std::endl;
 
+          
+       // BLUE player always goes first
        for(int player=0; player < 2; player++)
        {
           unsigned int choice_row, choice_column;
 
           do
           {
-             std::cout << ((player == 0) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a column: ";
+             std::cout << ((hex_players[player]->getPlayerColor() == nodecolor::RED) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a column: ";
              std::cin >> choice_column;
 
              if((choice_column == 0) || (choice_column > G.getGraphHexDimension()))
@@ -1192,7 +1278,7 @@ std::ostream &operator<< (std::ostream &cout, std::list<unsigned int> *path)
 
           do
           {
-             std::cout << ((player == 0) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a row: ";
+             std::cout << ((hex_players[player]->getPlayerColor() == nodecolor::RED) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a row: ";
              std::cin >> choice_row;
 
              if((choice_row == 0) || (choice_row > G.getGraphHexDimension()))
@@ -1201,13 +1287,29 @@ std::ostream &operator<< (std::ostream &cout, std::list<unsigned int> *path)
                 continue;
              }
 
-             break;
+             // check to see if the node already has a color
+             if(G.getNodeColor(G.getNodeNumber(choice_row, choice_column)) == nodecolor::NONE)
+             {
+                break;
+             }
+             else
+             {
+                std::cout << "Your tile choice has already been taken, please try again" << std::endl;
+                continue;
+             }
+
           }while(true);
 
           std::cout << "you chose the node at row " << choice_row << " and column " << choice_column << std::endl;
 
-          G.setNodeColor(G.getNodeNumber((choice_row-1), (choice_column-1)), ((player == 0) ? nodecolor::RED : nodecolor::BLUE));
+          G.setNodeColor(G.getNodeNumber((choice_row-1), (choice_column-1)), ((hex_players[player]->getPlayerColor() == nodecolor::RED) ? nodecolor::RED : nodecolor::BLUE));
       
+        
+          // print out the new game board
+          std::cout << G << std::endl;
+
+          // do we have a winner?
+
        }
 
     }while(true);
