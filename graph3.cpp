@@ -79,6 +79,7 @@ public:
    void setNodeVisited(unsigned int nodeNumber);
    void doDijkstra( unsigned int originNode, unsigned int destNode, std::list<unsigned int> *pathResult, int &pathCost);
    void doPrim( unsigned int originNode);
+   unsigned int getGraphHexDimension();
 
    int getNodeNumber(unsigned int rowNumber, unsigned int nodeNumberInRow); // compute the absolute node number given the row and node number in that row
 
@@ -502,6 +503,11 @@ bool Graph::isNodeInGraph(unsigned int nodeNumber)
 
     return retval;
  }
+
+unsigned int Graph::getGraphHexDimension()
+{
+   return m_hexGraphDimension;
+}
 
 
 // int Graph::setEdgeValue(unsigned int sourceNodeNumber,unsigned int destNodeNumber, unsigned int weight )
@@ -970,7 +976,8 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
    // print the graph
    // for hex graphs, this needs to be done row by row and indented
 
-   out << "\n=========== hex graph  ===============\n";
+   out << "\n===== hex graph (" << g.getGraphHexDimension() << " x " << g.getGraphHexDimension() << ")===============\n";
+
 
    // hex graphs have a dimension greater than 0
    if(g.m_hexGraphDimension > 0)
@@ -1140,20 +1147,54 @@ std::ostream &operator<< (std::ostream &cout, std::list<unsigned int> *path)
     // instantiate a graph from the local file (called graph.txt)
     Graph G(11); // a new graph 3x3 hex graph
 
-    G.setNodeColor(20, nodecolor::RED);
-    G.setNodeColor(40, nodecolor::RED);
-    G.setNodeColor(22, nodecolor::BLUE);
-    G.setNodeColor(41, nodecolor::BLUE);
-
-    // print out the whole graph, but only if we've compiled to do so
-    G.printGraph();
-
 
     std::cout <<"Graph has " << G.getNodeCount() << " nodes and " << G.getEdgeCount() << " indicies" << std::endl;
 
-    std::cout << "\n\n=========== Graph Printout ===============\n\n" << G << std::endl;
+    do
+    {
+       std::cout << "Shall we play a game?" << std::endl;
+       std::cout << G << std::endl;
 
+       for(int player=0; player < 2; player++)
+       {
+          unsigned int choice_row, choice_column;
+          do
+          {
+             std::cout << ((player == 0) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a row: ";
+             std::cin >> choice_row;
+
+             if(choice_row > G.getGraphHexDimension())
+             {
+                std::cout << "you must choose a row between 0 and " << (G.getGraphHexDimension()-1) << std::endl;
+                continue;
+             }
+
+             break;
+          }while(true);
+
+          do
+          {
+             std::cout << ((player == 0) ? "\e[1;31mRED\e[0m" : "\e[1;36mBLUE\e[0m")  << ", choose a column: ";
+             std::cin >> choice_column;
+
+             if(choice_column > G.getGraphHexDimension())
+             {
+                std::cout << "you must choose a column between 0 and " << (G.getGraphHexDimension()-1) << std::endl;
+                continue;
+             }
+
+             break;
+          }while(true);
+
+          std::cout << "you chose the node at row " << choice_row << " and column " << choice_column << std::endl;
+
+          G.setNodeColor(G.getNodeNumber(choice_row, choice_column), ((player == 0) ? nodecolor::RED : nodecolor::BLUE));
+      
+       }
+
+    }while(true);
 #endif
+
 
     return(1);
 
