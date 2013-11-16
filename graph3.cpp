@@ -169,7 +169,6 @@ graphPoint::graphPoint( unsigned int nodeNumber, int cost = (-1), bool visited =
    m_hexRowNumber = -1;         // this is not a hex node element
    m_nodeColor = nodecolor::NONE;
 
-   std::cout << "Node number " << nodeNumber << " added" << std::endl;
 }
 
 
@@ -366,7 +365,7 @@ Graph::Graph(unsigned int hexGraphDimension)
 
       for(int nodeInRow=0; nodeInRow < hexGraphDimension; nodeInRow++)
       {
-         std::cout << "processing node at location (" << row << ")(" << nodeInRow << ") Node: " << (((row) * hexGraphDimension) + nodeInRow) << std::endl;
+         // std::cout << "processing node at location (" << row << ")(" << nodeInRow << ") Node: " << (((row) * hexGraphDimension) + nodeInRow) << std::endl;
          //each node gets up to 6 edges...
          for (int rowNeighbor = -1; rowNeighbor < 2; rowNeighbor++ )  //row above, this row, and next row
          {
@@ -376,9 +375,10 @@ Graph::Graph(unsigned int hexGraphDimension)
                if(((rowNeighbor + row) < 0) || (rowNeighbor + row) > (hexGraphDimension - 1)) continue;
                if((( neighbor_array[rowNeighbor+1][neighbor_index] + nodeInRow ) < 0) || (( neighbor_array[rowNeighbor+1][neighbor_index] + nodeInRow ) > (hexGraphDimension - 1))) continue;
   
-               std::cout << "adding edge from " << ((row * hexGraphDimension) + nodeInRow) 
-                         << " to " <<
-                  (((rowNeighbor + row) * hexGraphDimension) + ((neighbor_array[rowNeighbor+1][neighbor_index] + nodeInRow ))) << std::endl;
+               // std::cout << "adding edge from " << ((row * hexGraphDimension) + nodeInRow) 
+               //           << " to " <<
+               //    (((rowNeighbor + row) * hexGraphDimension) + ((neighbor_array[rowNeighbor+1][neighbor_index] + nodeInRow ))) << std
+               // ::endl;
 
                addEdge(((row * hexGraphDimension) + nodeInRow), 
                   (((rowNeighbor + row) * hexGraphDimension) + ((neighbor_array[rowNeighbor+1][neighbor_index] + nodeInRow ))),1);
@@ -432,7 +432,6 @@ void Graph::addNode(unsigned int nodeNumber)
 
    if(it == graphNodes.end())
    {
-      std::cout << "adding node " << nodeNumber << std::endl;
       graphNodes[nodeNumber] = new graphPoint(nodeNumber);
       m_totalNumVerticies++;
       graphNodes[nodeNumber]->resetVisited();
@@ -460,7 +459,6 @@ void Graph::addEdge(unsigned int sourceNodeNumber, unsigned int destNodeNumber, 
 
    if( it_s != graphNodes.end())
    {
-      std::cout << "AddEdge called for edge from " << sourceNodeNumber << " to " << destNodeNumber << " cost: " << edgeWeight << std::endl;
       it_s->second->createEdge(destNodeNumber, edgeWeight);
       m_totalNumEdges++;
    }
@@ -1072,7 +1070,7 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
    // print the graph
    // for hex graphs, this needs to be done row by row and indented
 
-   out << "\n===== hex graph (" << g.getGraphHexDimension() << " x " << g.getGraphHexDimension() << ")===============\n";
+   out << "\n============ Game of HEX (" << g.getGraphHexDimension() << " x " << g.getGraphHexDimension() << ")===============\n";
 
 
    // hex graphs have a dimension greater than 0
@@ -1294,21 +1292,24 @@ bool Graph::mstIncludesRow(unsigned int row, std::vector< int > *pMstVector)
 
 #else
 
+    unsigned int board_size;
+
     /* initialize random seed: */
     srand (time(NULL));
 
     const char print_graph_entry = 'n';
 
-    // instantiate a graph from the local file (called graph.txt)
-    Graph G(4); // a new graph 3x3 hex graph
-
-
-    std::cout <<"Graph has " << G.getNodeCount() << " nodes and " << G.getEdgeCount() << " indicies" << std::endl;
 
     std::array< Player *, 2 > hex_players;
 
     std::cout << "\n\nShall we play a game?" << std::endl;
+    std::cout << "Chose a board size ";
+    std::cin >> board_size;
+
+    Graph G(board_size); // a new graph of the chosen size hex graph
+
     std::cout << G << std::endl;
+    std::cout <<"Graph has " << G.getNodeCount() << " nodes and " << G.getEdgeCount() << " indicies" << std::endl;
 
     // First, let player one choose the color he wants
     Player *p1 = new Player;
