@@ -1010,11 +1010,22 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
 
 }
 
-inline std::ostream &right_shift_row(std::ostream &out, unsigned int row)
+inline std::ostream &right_shift_row(std::ostream &out, unsigned int row, bool printRow = false)
 {
    
+   if(printRow)
+   {
+      out << row;
+   }
+
    out << "   ";
 
+   // account for printing the row number
+   if(printRow)
+      if(row > 9) out<<"\b\b";
+      else out<<"\b";
+      
+   // now print the spaces needed for each row for correct allignment
    for(int spaces=0; spaces<row*2; spaces++)
    {
       out << " ";
@@ -1041,13 +1052,13 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
       // must do two iterations per row
       for(int row=0; row<g.m_hexGraphDimension; row++)
       {
-
+         // we need to do two passes for each row, one for the nodes, and one for the interconnects
          for(int rowIter=0; rowIter<2; rowIter++)
          {
-            if(rowIter==0) out<<(row+1);
-            right_shift_row(out, row);
-            if(rowIter==0) out << "\b";
+            // print the row number on the node row and allign correctly
+            right_shift_row(out, row+1, (rowIter ? false : true));
 
+            // do once for each column in the row
             for(int col=0; col<g.m_hexGraphDimension;col++)
             {
                unsigned int nodeNumber = g.getNodeNumber(row, col);
