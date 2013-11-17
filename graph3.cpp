@@ -1026,7 +1026,7 @@ inline std::ostream &right_shift_row(std::ostream &out, unsigned int row, bool p
       else out<<"\b";
       
    // now print the spaces needed for each row for correct allignment
-   for(int spaces=0; spaces<row*2; spaces++)
+   for(int spaces=0; spaces<(row*2); spaces++)
    {
       out << " ";
    }
@@ -1045,8 +1045,13 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
    if(g.m_hexGraphDimension > 0)
    {
       // this is a hex graph
-      right_shift_row(out, 0);
-      for(int header=0; header<g.m_hexGraphDimension; header++) out << (header+1) << "   ";
+      right_shift_row(out, 1);
+      for(int header=0; header<g.m_hexGraphDimension; header++) 
+      {
+         if(!(header<9)) out <<"\b";  // adjust for the size of the number
+         out << (header+1) << "   ";
+
+      }
       out << "\n\n";
 
       // must do two iterations per row
