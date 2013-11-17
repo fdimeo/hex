@@ -1012,6 +1012,9 @@ void Graph::doDijkstra( unsigned int originNode, unsigned int destNode, std::lis
 
 inline std::ostream &right_shift_row(std::ostream &out, unsigned int row)
 {
+   
+   out << "   ";
+
    for(int spaces=0; spaces<row*2; spaces++)
    {
       out << " ";
@@ -1024,20 +1027,27 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
    // print the graph
    // for hex graphs, this needs to be done row by row and indented
 
-   out << "\n============ Game of HEX (" << g.getGraphHexDimension() << " x " << g.getGraphHexDimension() << ")===============\n";
+   out << "\n ============ Game of HEX (" << g.getGraphHexDimension() << " x " << g.getGraphHexDimension() << ")===============\n\n";
 
 
    // hex graphs have a dimension greater than 0
    if(g.m_hexGraphDimension > 0)
    {
       // this is a hex graph
+      right_shift_row(out, 0);
+      for(int header=0; header<g.m_hexGraphDimension; header++) out << (header+1) << "   ";
+      out << "\n\n";
 
       // must do two iterations per row
       for(int row=0; row<g.m_hexGraphDimension; row++)
       {
+
          for(int rowIter=0; rowIter<2; rowIter++)
          {
+            if(rowIter==0) out<<(row+1);
             right_shift_row(out, row);
+            if(rowIter==0) out << "\b";
+
             for(int col=0; col<g.m_hexGraphDimension;col++)
             {
                unsigned int nodeNumber = g.getNodeNumber(row, col);
