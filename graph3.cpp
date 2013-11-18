@@ -1038,7 +1038,8 @@ std::ostream& operator<<(std::ostream &out, Graph &g)
    // print the graph
    // for hex graphs, this needs to be done row by row and indented
 
-   out << "\n ============ Game of HEX (" << g.getGraphHexDimension() << " x " << g.getGraphHexDimension() << ")===============\n\n";
+   out << "\n ============ Game of HEX (" << g.getGraphHexDimension() << " x " << g.getGraphHexDimension() << ")===============" << std::endl;
+   out << " \e[1;31mRED plays side-side\e[0m, and \e[1;36mBLUE plays up-down\e[0m\n\n";
 
 
    // hex graphs have a dimension greater than 0
@@ -1409,13 +1410,13 @@ bool Graph::mstIncludesRow(unsigned int row, std::vector< int > *pMstVector)
              &mst_solution_vec, false);
 
           // now see if we have a winner
-          if(hex_players[player]->getPlayerColor() == nodecolor::RED)
+          if(hex_players[player]->getPlayerColor() == nodecolor::BLUE)
           {
              // check if we have a solution that has both north and south edges
              if(G.mstIncludesRow(0, &mst_solution_vec) && 
                 G.mstIncludesRow((G.getGraphHexDimension()-1), &mst_solution_vec))
              {
-                we_have_a_winner = nodecolor::RED;
+                we_have_a_winner = nodecolor::BLUE;
                 break;
              }
           }
@@ -1425,7 +1426,7 @@ bool Graph::mstIncludesRow(unsigned int row, std::vector< int > *pMstVector)
              if(G.mstIncludesColumn(0, &mst_solution_vec) && 
                 G.mstIncludesColumn((G.getGraphHexDimension()-1), &mst_solution_vec))
              {
-                we_have_a_winner = nodecolor::BLUE;
+                we_have_a_winner = nodecolor::RED;
                 break;
              }
           }                              
